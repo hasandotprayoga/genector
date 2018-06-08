@@ -2,7 +2,7 @@
     "name": "hasandotprayoga/genector",
     "description": "General MySql Connector",
     "type": "library",
-    "license": "@HDP",
+    "license": "GPL",
     "authors": [
         {
             "name": "Hasan Prayoga",
