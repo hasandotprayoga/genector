@@ -2,6 +2,8 @@
     "name": "hasandotprayoga/genector",
     "description": "General MySql Connector",
     "type": "library",
+    "license": "MIT",
+    "keywords": ["hasandotprayoga", "hdp", "connector", "php", "mysql", "general"],
     "authors": [
         {
             "name": "Hasan Prayoga",
@@ -13,7 +15,5 @@
 		"psr-4": {
 			"Genector\\": "src/Genector"
 		}
-	},
-	"minimum-stability": "dev",
-    "prefer-stable": true
+	}
 }
