@@ -15,5 +15,6 @@
 		"psr-4": {
 			"Genector\\": "src/Genector"
 		}
-	}
+	},
+    "minimum-stability":"dev"
 }
