@@ -4,6 +4,7 @@
     "type": "library",
     "license": "MIT",
     "keywords": ["hasandotprayoga", "hdp", "connector", "php", "mysql", "general"],
+    "homepage": "https://github.com/hasandotprayoga/genector",
     "authors": [
         {
             "name": "Hasan Prayoga",
