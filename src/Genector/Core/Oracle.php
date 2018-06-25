@@ -41,12 +41,14 @@ class Oracle
 		$fields = $this->getField($data);
 		$values = $this->getVal($data);
 
-		$sql = oci_parse($this->conn(), "INSERT INTO $table ($fields) VALUES($values)");
+		$sql = oci_parse($this->conn(), "INSERT INTO $table ($fields) VALUES($values) returning id into :id");
+
+		OCIBindByName($sql,":ID",$id);
 
 		$exec = oci_execute($sql);
 
 		if ($exec) {
-			return ['status'=>'success'];
+			return ['status'=>'success','id'=>$id];
 		}else{
 			return false;
 		}
