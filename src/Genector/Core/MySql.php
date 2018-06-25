@@ -1,6 +1,6 @@
 <?php
 
-namespace Genector\Core;
+namespace app\connector\genector\core;
 /**
  * Bismillah,
  * * GENECTOR V1.
@@ -12,13 +12,22 @@ namespace Genector\Core;
  ********************************
  */
 
-class GMStor
+class MySql
 {
 
-	private $config;
+	/*
+	*
+	$config = [
+		'host'=>'Your Host',
+		'username'=>'Your Username',
+		'password'=>'your Password'
+	]; 
+	*
+	*/
+	public $config;
 	
-	public function __construct($arr){ 
-		$this->config = $arr;
+	public function __construct(){ 
+		// $this->config = $arr;
 		return $this->conn();
 	}
 
@@ -71,15 +80,16 @@ class GMStor
 
 	public function update($table, $data, $cond){
 		$data = $this->getData($data);
-
-		$sql = "UPDATE $table SET $data WHERE $cond";
+		$condition = $this->getCond($cond);
+		$sql = "UPDATE $table SET $data WHERE $condition";
 
 		return $this->conn()->query($sql);
 	}
 
 	public function delete($table, $cond){
 
-		$sql = "DELETE FROM $table WHERE $cond";
+		$condition = $this->getCond($cond);
+		$sql = "DELETE FROM $table WHERE $condition";
 
 		return $this->conn()->query($sql);
 	}
@@ -140,7 +150,7 @@ class GMStor
 
 	private function getConfig($data){ return $this->arrObj($this->config)->$data; }
 
-	private function arrObj($arr){ return (object) $arr; }
+	public function arrObj($arr){ return (object) $arr; }
 
 }
 
