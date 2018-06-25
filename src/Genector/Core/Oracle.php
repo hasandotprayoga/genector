@@ -5,14 +5,14 @@ namespace app\connector\genector\core;
  * Bismillah,
  * * GENECTOR V1.
  * * * by HASANDOTPRAYOGA
- * * * 23 Romadhon 1439
+ * * * 11 Syawal 1439
  *************************
  * * * 0813-1940-3309
  * * * hasandotprayoga@gmail.com
  ********************************
  */
 
-class MySql
+class Oracle
 {
 
 	/*
@@ -41,32 +41,34 @@ class MySql
 		$fields = $this->getField($data);
 		$values = $this->getVal($data);
 
-		$sql = "INSERT INTO $table ($fields) VALUES ($values)";
+		$sql = oci_parse($this->conn(), "INSERT INTO $table ($fields) VALUES($values)");
 
-		$exec = $this->conn();
-		$exec->query($sql);
+		$exec = oci_execute($sql);
 
 		if ($exec) {
-			return ['status'=>'success','id'=>$exec->insert_id];
+			return ['status'=>'success'];
 		}else{
 			return false;
 		}
+
 	}
 
 	public function update($table, $data, $cond){
 		$data = $this->getData($data);
 		$condition = $this->getCond($cond);
-		$sql = "UPDATE $table SET $data WHERE $condition";
+		
+		$sql = oci_parse($this->conn(), "UPDATE $table SET $data WHERE $condition");
 
-		return $this->conn()->query($sql);
+		return oci_execute($sql);
 	}
 
 	public function delete($table, $cond){
 
 		$condition = $this->getCond($cond);
-		$sql = "DELETE FROM $table WHERE $condition";
 
-		return $this->conn()->query($sql);
+		$sql = oci_parse($this->conn(), "DELETE FROM $table WHERE $condition");
+
+		return oci_execute($sql);
 	}
 
 	/**
@@ -74,21 +76,17 @@ class MySql
 	*/
 
 	private function conn(){
-		$conn = new \mysqli(
-			$this->getConfig('host'),
-			$this->getConfig('username'),
-			$this->getConfig('password'),
-			$this->getConfig('database')
-		);
+		$conn = oci_connect($this->getConfig('username'),$this->getConfig('password'),$this->getConfig('host'));
 
-		if ($conn->connect_error) {
-		    return false;
+		if (!$conn) {
+			return false;
 		}else{
-			return $conn;
+		    return $conn;
 		}
+
 	}
 
-	private function disconn(){ return $this->conn()->close(); }
+	private function disconn(){ return  oci_close($this->conn()); }
 
 	private function getVal($arr){
 		$val = [];
@@ -97,7 +95,7 @@ class MySql
 	        $val[$k] = $v;
 	    }
 
-	    return '"'.join('", "',$val).'"';
+	    return "'".join("', '",$val)."'";
 	}
 
 	private function getField($arr){ return implode(", ", array_keys($arr)); }
