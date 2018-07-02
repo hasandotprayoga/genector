@@ -46,10 +46,38 @@ class MySql
 		$exec = $this->conn();
 		$exec->query($sql);
 
+		$key = $this->primaryKey($table)->Column_name;
+
 		if ($exec) {
-			return ['status'=>'success','id'=>$exec->insert_id];
+			$record =$this->record($table, [$key => $exec->insert_id]);
+			return $this->arrObj(['status'=>'success','record'=>$record]);
 		}else{
 			return false;
+		}
+	}
+
+	public function read($table, $select, $cond=false){
+		if ($select !== '*') {
+			$columns = $this->getVal($select);
+		}else{
+			$columns = '*';
+		}
+
+		if ($cond) {
+			$sql = "SELECT $columns FROM $table where $cond";
+		}else{
+			$sql = "SELECT $columns FROM $table";
+		}
+
+		$result = $this->conn()->query($sql);
+		if ($result->num_rows > 0) {
+		    while( $row = $result->fetch_assoc()){
+			    $arr[] = $row;
+			}
+
+			return $arr;
+		} else {
+		    return false;
 		}
 	}
 
@@ -58,20 +86,54 @@ class MySql
 		$condition = $this->getCond($cond);
 		$sql = "UPDATE $table SET $data WHERE $condition";
 
-		return $this->conn()->query($sql);
+		$exec = $this->conn();
+		$exec->query($sql);
+
+		if ($exec) {
+			$record =$this->record($table, $cond);
+			return $this->arrObj(['status'=>'success','record'=>$record]);
+		}else{
+			return false;
+		}
 	}
 
 	public function delete($table, $cond){
 
 		$condition = $this->getCond($cond);
+		$record =$this->record($table, $cond);
+		
 		$sql = "DELETE FROM $table WHERE $condition";
 
-		return $this->conn()->query($sql);
+		$exec = $this->conn()->query($sql);
+
+		if ($exec) {
+			return $this->arrObj(['status'=>'success','record'=>$record]);
+		}else{
+			return false;
+		}
 	}
 
 	/**
 	*
 	*/
+
+	private function record($table, $cond)
+	{	
+		$condition = $this->getCond($cond);
+		$q = "select * from $table where $condition";
+		$exec = $this->conn()->query($q);
+
+		return $this->arrObj($exec->fetch_assoc());
+	}
+
+	private function primaryKey($table)
+	{
+		$q = "show keys from $table where key_name = 'PRIMARY'";
+
+		$exec = $this->conn()->query($q);
+
+		return $this->arrObj($exec->fetch_assoc());
+	}
 
 	private function conn(){
 		$conn = new \mysqli(
@@ -106,7 +168,13 @@ class MySql
 		$d = [];
 
 	    foreach ($arr as $k => $v) {
-	        $d[] = "$k='$v'";
+	        if (is_array($v)) {
+	    		$val = implode(", ", $v);
+	    	}else{
+	    		$val = $v;
+	    	}
+
+	    	$d[] = "$k='$val'";
 	    }
 	    
 	    return join(', ',$d);

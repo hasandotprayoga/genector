@@ -10,98 +10,68 @@ namespace app\connector\genector\core;
  * * * hasandotprayoga@gmail.com
  ********************************
  */
-
 class API
 {
-
 	public $config;
-	/*
-		$config = [
-			'url'=>'http://www.nyontoh.com/',
-			'username'=>'username',
-			'password'=>'password'
-		];
-	*/
-	
-	private $init;
 
-	private $data=[];
-	
-	public function __construct()
+	public $data;
+
+	private function sendData($data)
 	{
-	   	$this->init = curl_init();
-
-	   	$this->option();
-	   	$this->auth();
+		return json_encode($data);
 	}
 
-	public function __destruct()
+	public function create()
 	{
-		curl_close($this->init);
-	}
-
-	public function create($data)
-	{
-		$this->data = [
+		
+		return $this->send($this->sendData([
 			'action'=>'create',
-			'data'=>$data
-		];
-		return $this->call('POST', json_encode($this->data));
+			'data'=>$this->data
+		]));
 	}
 
-	public function update($data, $key)
+	public function update()
 	{
-		$this->data = [
+		
+		return $this->send($this->sendData([
 			'action'=>'update',
-			'data'=>$data,
-			'key'=>$key
-		];
-		return $this->call('POST', json_encode($this->data));
+			'data'=>$this->data
+		]));
 	}
 
-	public function delete($key)
+	public function delete()
 	{
-		$this->data = [
+		
+		return $this->send($this->sendData([
 			'action'=>'delete',
-			'data'=>null,
-			'key'=>$key
-		];
-		return $this->call('POST', json_encode($this->data));
+			'data'=>$this->data
+		]));
 	}
 
-	private function call($method, $data)
+	private function send($data)
 	{
-	   	switch ($method){
-	      	case "POST":
-	        	curl_setopt($this->init, CURLOPT_POST, 1);
-	        	if ($data)
-	            	curl_setopt($this->init, CURLOPT_POSTFIELDS, $data);
-	        	break;
-	      	// default:
-	       //  	if ($data)
-	       //      	$this->config['url'] = sprintf("%s?%s", $this->getConfig('url'), http_build_query($data));
-	   	}
-	   	
-	   	$result = curl_exec($this->init);
-	   
-	   	if(!$result){die("Connection Failure");}
-	   	
-	   	return $result;
-	}
-
-	private function option()
-	{
-	   	curl_setopt($this->init, CURLOPT_URL, $this->getConfig('url'));
-	   	// OPTIONS:
-	   	curl_setopt($this->init, CURLOPT_HTTPHEADER, array(
-	    	'Content-Type: application/json',
-	   	));
-	   	curl_setopt($this->init, CURLOPT_RETURNTRANSFER, 1);
+		$ch = curl_init( $this->getConfig('url') );
+		# Setup request to send json via POST.
+		$payload = json_encode($data);
+		curl_setopt( $ch, CURLOPT_POSTFIELDS, $payload );
+		curl_setopt( $ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+		# Return response instead of printing.
+		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+		# Auth
+		curl_setopt(
+	   		$ch, 
+	   		CURLOPT_USERPWD, 
+	   		$this->getConfig('username').":".$this->getConfig('password')
+	   	);
+		# Send request.
+		$result = json_decode(curl_exec($ch));
+		curl_close($ch);
+		# Print response.
+		return $result;
 	}
 
 	private function auth()
 	{
-	   	curl_setopt($this->init, CURLOPT_USERPWD, $this->getConfig('username').":".$this->getConfig('password'));
 	}
 
 	private function getConfig($data){ return $this->arrObj($this->config)->$data; }
