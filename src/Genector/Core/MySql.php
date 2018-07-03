@@ -50,6 +50,7 @@ class MySql
 
 		if ($exec) {
 			$record =$this->record($table, [$key => $exec->insert_id]);
+			
 			return $this->arrObj(['status'=>'success','record'=>$record]);
 		}else{
 			return false;

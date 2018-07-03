@@ -41,14 +41,19 @@ class Oracle
 		$fields = $this->getField($data);
 		$values = $this->getVal($data);
 
-		$sql = oci_parse($this->conn(), "INSERT INTO $table ($fields) VALUES($values) returning id into :id");
+		$key = $this->primaryKey($table)->COLUMN_NAME;
+
+		$sql = oci_parse($this->conn(), "INSERT INTO $table ($fields) VALUES($values) returning $key into :ID");
 
 		OCIBindByName($sql,":ID",$id);
 
 		$exec = oci_execute($sql);
 
 		if ($exec) {
-			return ['status'=>'success','id'=>$id];
+
+			$record = $this->record($table, [$key=>$id]);
+
+			return $this->arrObj(['status'=>'success','record'=>$record]);
 		}else{
 			return false;
 		}
@@ -61,21 +66,55 @@ class Oracle
 		
 		$sql = oci_parse($this->conn(), "UPDATE $table SET $data WHERE $condition");
 
-		return oci_execute($sql);
+		$exec = oci_execute($sql);
+
+		if ($exec) {
+			$record =$this->record($table, $cond);
+			return $this->arrObj(['status'=>'success','record'=>$record]);
+		}else{
+			return false;
+		}
 	}
 
 	public function delete($table, $cond){
 
 		$condition = $this->getCond($cond);
+		$record =$this->record($table, $cond);
 
 		$sql = oci_parse($this->conn(), "DELETE FROM $table WHERE $condition");
 
-		return oci_execute($sql);
+		$exec = oci_execute($sql);
+
+		if ($exec) {
+			return $this->arrObj(['status'=>'success','record'=>$record]);
+		}else{
+			return false;
+		}
 	}
 
 	/**
 	*
 	*/
+
+	private function record($table, $cond)
+	{
+		$condition = $this->getCond($cond);
+
+		$sql = oci_parse($this->conn(), "select * from $table where $condition");
+
+		$exec = oci_execute($sql);
+
+		return $this->arrObj(oci_fetch_array($sql,OCI_ASSOC+OCI_RETURN_NULLS));
+	}
+
+	private function primaryKey($table)
+	{
+		$sql = oci_parse($this->conn(), "SELECT COLS.COLUMN_NAME FROM ALL_CONSTRAINTS CONST, ALL_CONS_COLUMNS COLS WHERE COLS.TABLE_NAME = 'SAMPLEE' AND CONST.CONSTRAINT_TYPE = 'P'  AND CONST.CONSTRAINT_NAME = COLS.CONSTRAINT_NAME AND CONST.OWNER= COLS.OWNER ORDER BY COLS.TABLE_NAME, COLS.POSITION");
+
+		$exec = oci_execute($sql);
+
+		return $this->arrObj(oci_fetch_array($sql));
+	}
 
 	private function conn(){
 		$conn = oci_connect($this->getConfig('username'),$this->getConfig('password'),$this->getConfig('host'));
@@ -106,7 +145,13 @@ class Oracle
 		$d = [];
 
 	    foreach ($arr as $k => $v) {
-	        $d[] = "$k='$v'";
+	        if (is_array($v)) {
+	    		$val = implode(", ", $v);
+	    	}else{
+	    		$val = $v;
+	    	}
+
+	    	$d[] = "$k='$val'";
 	    }
 	    
 	    return join(', ',$d);
